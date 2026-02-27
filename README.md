@@ -14,7 +14,7 @@ Vše běží offline, žádná data nikam neodcházejí. Je to váš osobní „
 
 | Složka / Soubor | Popis |
 |-----------------|-------|
-| [📁 poruchy/](./home/12-porruch.md) | Dokumentace 12 jazykových poruch – každá s popisem, otázkou, významem a ukázkou. |
+| [📁 poruchy/](./home/12-poruch.md) | Dokumentace 12 jazykových poruch – každá s popisem, otázkou, významem a ukázkou. |
 | [📁 navody/](./home/jak-pouzivat.md/) | Návody, jak nástroje používat a jak celý systém vznikl. |
 | [📁 nastroje/](./home/o-systemu.md) | Samotné HTML nástroje – otevřete v prohlížeči a pracujte. |
 | [📄 12-poruch.md](./home/12-poruch.md) | Hlavní přehled poruch – vhodný k tisku i studiu. |
