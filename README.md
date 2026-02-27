@@ -1,4 +1,4 @@
-# 🤿 detektor_JAZYKOVYCH_poruch
+# 🤿 detektor-JAZYKOVYCH-poruch
 
 ## 🕵️ Nástroj pro analýzu výpovědí
 
