@@ -1,7 +1,7 @@
 # 🧭 Jak používat nástroje
 
-1. Než začnete, seznamte se s [12 poruchami](../poruchy/12-poruch.md). Pomůže vám to lépe interpretovat výsledky.
-2. Otevřete [hlavní nástroj](../nastroje/analyza.html) v prohlížeči.
+1. Než začnete, seznamte se s [12 poruchami](../home/12-poruch.md). Pomůže vám to lépe interpretovat výsledky.
+2. Otevřete [hlavní nástroj](../home/analyza.html) v prohlížeči.
 3. Zkopírujte text, který chcete analyzovat (výpověď, email, přepis), a vložte ho do textového pole.
 4. Klikněte na tlačítko **Analyzovat**.
 5. Barevně označené věty ukazují místa, kde se poruchy vyskytují. Každá barva odpovídá jedné poruše (viz legenda pod textem).
