@@ -1,6 +1,6 @@
-#🤿 detektor_JAZYKOVYCH_poruch
+# 🤿 detektor_JAZYKOVYCH_poruch
 
-# 🕵️ Nástroj pro analýzu výpovědí
+## 🕵️ Nástroj pro analýzu výpovědí
 
 Pomocník pro vyšetřovatele, soudce, právníky – a kohokoli, kdo pracuje s textem a potřebuje v něm vidět skryté vzorce.
 
