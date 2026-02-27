@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Analyzátor výpovědí</title>
+    <style>
+        * { box-sizing: border-box; font-family: sans-serif; }
+        body { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; background: #fafafa; }
+        h1 { color: #1e3c5c; border-bottom: 2px solid #ccc; padding-bottom: 0.5rem; }
+        textarea { width: 100%; height: 200px; padding: 0.75rem; font-size: 1rem; border: 1px solid #aaa; border-radius: 6px; }
+        button { padding: 0.75rem 2rem; font-size: 1.2rem; background: #1e3c5c; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 1rem 0; }
+        button:hover { background: #143047; }
+        .legend { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; padding: 1rem; background: #e9eef2; border-radius: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+        .color-box { width: 24px; height: 24px; border-radius: 4px; }
+        .analyzed-text { background: white; border: 1px solid #ccc; padding: 1rem; border-radius: 8px; white-space: pre-wrap; line-height: 1.8; }
+        .analyzed-text mark { padding: 2px 0; border-radius: 4px; }
+        .stats { margin-top: 2rem; }
+        .stats h3 { margin-bottom: 0.5rem; }
+        .stats ul { list-style: none; padding: 0; }
+        .stats li { padding: 0.5rem; margin-bottom: 0.5rem; background: white; border-left: 6px solid; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stats li strong { display: inline-block; min-width: 120px; }
+        .note { font-size: 0.9rem; color: #555; margin-top: 2rem; border-top: 1px solid #ccc; padding-top: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Analyzátor jazykových poruch</h1>
+    <p>Vložte text (výpověď, email, přepis). Nástroj automaticky najde a barevně označí vybrané poruchy.</p>
+
+    <textarea id="inputText" placeholder="Sem vložte text..."></textarea>
+    <button onclick="analyze()">Analyzovat</button>
+
+    <div class="legend" id="legend"></div>
+    <div id="result" class="analyzed-text"></div>
+    <div id="stats" class="stats"></div>
+    <div class="note">
+        ⚠️ Nástroj pouze ukazuje, nevyhodnocuje. Každý nález je třeba interpretovat v kontextu případu.
+        Seznam poruch a otázek najdete v <a href="../poruchy/12-poruch.md" target="_blank">přehledu poruch</a>.
+    </div>
+
+    <script>
+        // Definice poruch (jen ty, které umíme jednoduše detekovat)
+        const PORUCHY = [
+            { id: 1, nazev: "Opakování", barva: "#ffcccc", detektor: detekujOpakovani },
+            { id: 2, nazev: "Přeskok", barva: "#cce5ff", detektor: null },  // složité, zatím ne
+            { id: 3, nazev: "Fixace", barva: "#ffe6b3", detektor: null },
+            { id: 4, nazev: "Ztráta souseda", barva: "#d9d9d9", detektor: null },
+            { id: 5, nazev: "Přetržení", barva: "#f9c6c6", detektor: detekujPretrzeni },
+            { id: 6, nazev: "Posun kontextu", barva: "#d5b3ff", detektor: null },
+            { id: 7, nazev: "Záměna rolí", barva: "#b3e0b3", detektor: null },
+            { id: 8, nazev: "Rozpad syntaxe", barva: "#ffb3ba", detektor: null },
+            { id: 9, nazev: "Emocionální zlom", barva: "#ffe699", detektor: null },
+            { id: 10, nazev: "Prázdná slova", barva: "#b3d9ff", detektor: detekujPrazdnaSlova },
+            { id: 11, nazev: "Cizí těleso", barva: "#ffcc99", detektor: detekujCiziTeleso },
+            { id: 12, nazev: "Ticho / mezera", barva: "#e0e0e0", detektor: detekujTicho }
+        ];
+
+        const PRAZDNA_SLOVA = ['jakoby', 'prostě', 'vlastně', 'no', 'že jo', 'takže', 'prostě', 'jaksi', 'v podstatě'];
+        const CIZI_TELESO_MIN_DELKA = 4; // minimální délka slova, aby bylo podezřelé
+
+        function analyze() {
+            const text = document.getElementById('inputText').value;
+            if (!text.trim()) return;
+
+            // Rozdělení na věty (jednoduché)
+            const vety = text.split(/(?<=[.!?])\s+/).filter(v => v.trim());
+
+            // Pro každou větu zjistíme, které poruchy se v ní vyskytují
+            const vysledkyVet = vety.map((veta, index) => {
+                const poruchy = [];
+                PORUCHY.forEach(p => {
+                    if (p.detektor && p.detektor(veta, vety, index)) {
+                        poruchy.push(p.id);
+                    }
+                });
+                return { text: veta, poruchy };
+            });
+
+            // Sestavení barevného HTML
+            let html = '';
+            vysledkyVet.forEach((v, i) => {
+                if (v.poruchy.length === 0) {
+                    html += v.text + ' ';
+                } else {
+                    // Podle prvního nálezu (pro jednoduchost)
+                    const p = PORUCHY.find(p => p.id === v.poruchy[0]);
+                    html += `<mark style="background-color: ${p.barva};">${v.text}</mark> `;
+                }
+            });
+            document.getElementById('result').innerHTML = html;
+
+            // Legenda
+            const legendaHtml = PORUCHY.map(p => 
+                `<div class="legend-item"><span class="color-box" style="background:${p.barva};"></span> ${p.nazev}</div>`
+            ).join('');
+            document.getElementById('legend').innerHTML = '<strong>Legenda:</strong> ' + legendaHtml;
+
+            // Statistiky
+            const staty = {};
+            vysledkyVet.forEach(v => {
+                v.poruchy.forEach(id => {
+                    staty[id] = (staty[id] || 0) + 1;
+                });
+            });
+
+            let statsHtml = '<h3>📊 Nalezené poruchy</h3><ul>';
+            PORUCHY.forEach(p => {
+                if (staty[p.id]) {
+                    statsHtml += `<li style="border-left-color: ${p.barva};"><strong>${p.nazev}:</strong> ${staty[p.id]}×</li>`;
+                }
+            });
+            if (Object.keys(staty).length === 0) statsHtml += '<li>Žádné poruchy nenalezeny.</li>';
+            statsHtml += '</ul>';
+            document.getElementById('stats').innerHTML = statsHtml;
+        }
+
+        // --- DETEKTORY (jen základní, lze dále vylepšovat) ---
+        function detekujOpakovani(veta, vety, index) {
+            if (index === 0) return false;
+            const slova = veta.split(/\s+/);
+            const slovaPredchozi = vety[index-1].split(/\s+/);
+            // Hledáme stejné slovo v předchozí větě (zjednodušeně)
+            return slova.some(s => slovaPredchozi.includes(s) && s.length > 3);
+        }
+
+        function detekujPretrzeni(veta) {
+            return veta.includes('…') || veta.includes('..') || veta.includes('prostě') || veta.includes('no nic');
+        }
+
+        function detekujPrazdnaSlova(veta) {
+            const slova = veta.toLowerCase().split(/\s+/);
+            return PRAZDNA_SLOVA.some(ps => slova.includes(ps));
+        }
+
+        function detekujCiziTeleso(veta, vety, index) {
+            // Zjednodušeně: pokud věta obsahuje slovo, které se v celém textu vyskytuje jen jednou
+            const vsechnaSlova = vety.flatMap(v => v.split(/\s+/).map(s => s.toLowerCase().replace(/[.,!?]/g, '')));
+            const slovaVety = veta.split(/\s+/).map(s => s.toLowerCase().replace(/[.,!?]/g, ''));
+            return slovaVety.some(slovo => {
+                if (slovo.length < CIZI_TELESO_MIN_DELKA) return false;
+                const pocet = vsechnaSlova.filter(s => s === slovo).length;
+                return pocet === 1;
+            });
+        }
+
+        function detekujTicho(veta) {
+            return veta.trim() === '' || veta.includes('(mlčí)') || veta === '…';
+        }
+    </script>
+</body>
+</html>
