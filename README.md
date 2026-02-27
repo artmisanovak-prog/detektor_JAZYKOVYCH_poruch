@@ -14,17 +14,17 @@ Vše běží offline, žádná data nikam neodcházejí. Je to váš osobní „
 
 | Složka / Soubor | Popis |
 |-----------------|-------|
-| [📁 poruchy/](./poruchy/) | Dokumentace 12 jazykových poruch – každá s popisem, otázkou, významem a ukázkou. |
-| [📁 navody/](./navody/) | Návody, jak nástroje používat a jak celý systém vznikl. |
-| [📁 nastroje/](./nastroje/) | Samotné HTML nástroje – otevřete v prohlížeči a pracujte. |
-| [📄 12-poruch.md](./poruchy/12-poruch.md) | Hlavní přehled poruch – vhodný k tisku i studiu. |
+| [📁 poruchy/](./home/) | Dokumentace 12 jazykových poruch – každá s popisem, otázkou, významem a ukázkou. |
+| [📁 navody/](./home/) | Návody, jak nástroje používat a jak celý systém vznikl. |
+| [📁 nastroje/](./home/) | Samotné HTML nástroje – otevřete v prohlížeči a pracujte. |
+| [📄 12-poruch.md](./home/12-poruch.md) | Hlavní přehled poruch – vhodný k tisku i studiu. |
 
 ---
 
 ## 🚀 Rychlý start
 
-1. Přečtěte si [přehled 12 poruch](./poruchy/12-poruch.md), abyste věděli, na co se dívat.
-2. Otevřete [hlavní nástroj](./nastroje/analyza.html) v prohlížeči.
+1. Přečtěte si [přehled 12 poruch](./home/12-poruch.md), abyste věděli, na co se dívat.
+2. Otevřete [hlavní nástroj](./home/analyza.html) v prohlížeči.
 3. Vložte text (výpověď, email, přepis rozhovoru) a klikněte na **Analyzovat**.
 4. Barevné značky vám ukážou, kde se poruchy vyskytují. Pod textem uvidíte souhrn.
 
@@ -34,8 +34,8 @@ Vše běží offline, žádná data nikam neodcházejí. Je to váš osobní „
 
 | Nástroj | Popis |
 |---------|-------|
-| [🔍 Hlavní analyzátor](./nastroje/analyza.html) | Vložte text, nástroj zvýrazní poruchy a ukáže jejich četnost. |
-| [📊 Porovnávač textů](./nastroje/porovnani.html) | (volitelné) Dejte dva texty vedle sebe a porovnejte výskyt poruch. |
+| [🔍 Hlavní analyzátor](./home/analyza.html) | Vložte text, nástroj zvýrazní poruchy a ukáže jejich četnost. |
+| [📊 Porovnávač textů](./home/porovnani.html) | (volitelné) Dejte dva texty vedle sebe a porovnejte výskyt poruch. |
 
 ---
 
