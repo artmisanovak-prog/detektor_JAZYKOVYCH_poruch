@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Porovnávač textů</title>
+    <style>
+        * { box-sizing: border-box; font-family: sans-serif; }
+        body { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; background: #fafafa; }
+        h1 { color: #1e3c5c; border-bottom: 2px solid #ccc; padding-bottom: 0.5rem; }
+        .compare-container { display: flex; gap: 2rem; margin: 2rem 0; }
+        .col { flex: 1; }
+        textarea { width: 100%; height: 300px; padding: 0.75rem; font-size: 1rem; border: 1px solid #aaa; border-radius: 6px; }
+        button { padding: 0.75rem 2rem; font-size: 1.2rem; background: #1e3c5c; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 1rem 0; }
+        button:hover { background: #143047; }
+        .legend { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; padding: 1rem; background: #e9eef2; border-radius: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+        .color-box { width: 24px; height: 24px; border-radius: 4px; }
+        .analyzed-text { background: white; border: 1px solid #ccc; padding: 1rem; border-radius: 8px; white-space: pre-wrap; line-height: 1.8; margin-top: 1rem; min-height: 150px; }
+        .stats { margin-top: 1rem; font-size: 0.95rem; }
+        .stats ul { list-style: none; padding: 0; }
+        .stats li { padding: 0.3rem; border-left: 4px solid; margin-bottom: 0.3rem; background: #f5f5f5; }
+        .note { font-size: 0.9rem; color: #555; margin-top: 2rem; border-top: 1px solid #ccc; padding-top: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>📊 Porovnávač textů</h1>
+    <p>Vložte dva texty (např. první a druhý výslech téže osoby). Nástroj ukáže analýzu vedle sebe.</p>
+
+    <div class="compare-container">
+        <div class="col">
+            <h3>Text A</h3>
+            <textarea id="textA" placeholder="První výpověď..."></textarea>
+        </div>
+        <div class="col">
+            <h3>Text B</h3>
+            <textarea id="textB" placeholder="Druhá výpověď..."></textarea>
+        </div>
+    </div>
+    <button onclick="compare()">Porovnat</button>
+
+    <div class="legend" id="legend"></div>
+
+    <div style="display: flex; gap: 2rem;">
+        <div class="col">
+            <h3>Text A – analýza</h3>
+            <div id="resultA" class="analyzed-text"></div>
+            <div id="statsA" class="stats"></div>
+        </div>
+        <div class="col">
+            <h3>Text B – analýza</h3>
+            <div id="resultB" class="analyzed-text"></div>
+            <div id="statsB" class="stats"></div>
+        </div>
+    </div>
+    <div class="note">
+        ⚠️ Nástroj pouze ukazuje, nevyhodnocuje. Porovnání je na vás.
+        Seznam poruch a otázek najdete v <a href="../poruchy/12-poruch.md" target="_blank">přehledu poruch</a>.
+    </div>
+
+    <script>
+        // Kopie stejných definic a detektorů jako v analyza.html
+        const PORUCHY = [
+            { id: 1, nazev: "Opakování", barva: "#ffcccc", detektor: detekujOpakovani },
+            { id: 2, nazev: "Přeskok", barva: "#cce5ff", detektor: null },
+            { id: 3, nazev: "Fixace", barva: "#ffe6b3", detektor: null },
+            { id: 4, nazev: "Ztráta souseda", barva: "#d9d9d9", detektor: null },
+            { id: 5, nazev: "Přetržení", barva: "#f9c6c6", detektor: detekujPretrzeni },
+            { id: 6, nazev: "Posun kontextu", barva: "#d5b3ff", detektor: null },
+            { id: 7, nazev: "Záměna rolí", barva: "#b3e0b3", detektor: null },
+            { id: 8, nazev: "Rozpad syntaxe", barva: "#ffb3ba", detektor: null },
+            { id: 9, nazev: "Emocionální zlom", barva: "#ffe699", detektor: null },
+            { id: 10, nazev: "Prázdná slova", barva: "#b3d9ff", detektor: detekujPrazdnaSlova },
+            { id: 11, nazev: "Cizí těleso", barva: "#ffcc99", detektor: detekujCiziTeleso },
+            { id: 12, nazev: "Ticho / mezera", barva: "#e0e0e0", detektor: detekujTicho }
+        ];
+
+        const PRAZDNA_SLOVA = ['jakoby', 'prostě', 'vlastně', 'no', 'že jo', 'takže', 'prostě', 'jaksi', 'v podstatě'];
+        const CIZI_TELESO_MIN_DELKA = 4;
+
+        function analyzeText(text) {
+            if (!text.trim()) return { vysledky: [], staty: {} };
+            const vety = text.split(/(?<=[.!?])\s+/).filter(v => v.trim());
+            const vysledky = vety.map((veta, index) => {
+                const poruchy = [];
+                PORUCHY.forEach(p => {
+                    if (p.detektor && p.detektor(veta, vety, index)) {
+                        poruchy.push(p.id);
+                    }
+                });
+                return { text: veta, poruchy };
+            });
+            const staty = {};
+            vysledky.forEach(v => v.poruchy.forEach(id => staty[id] = (staty[id] || 0) + 1));
+            return { vysledky, staty };
+        }
+
+        function renderAnalyza(vysledky, containerId, statsId) {
+            const container = document.getElementById(containerId);
+            const statsContainer = document.getElementById(statsId);
+            if (!vysledky.length) {
+                container.innerHTML = '';
+                statsContainer.innerHTML = '';
+                return;
+            }
+            let html = '';
+            vysledky.forEach(v => {
+                if (v.poruchy.length === 0) {
+                    html += v.text + ' ';
+                } else {
+                    const p = PORUCHY.find(p => p.id === v.poruchy[0]);
+                    html += `<mark style="background-color: ${p.barva};">${v.text}</mark> `;
+                }
+            });
+            container.innerHTML = html;
+
+            let statsHtml = '<ul>';
+            PORUCHY.forEach(p => {
+                const pocet = vysledky.flatMap(v => v.poruchy).filter(id => id === p.id).length;
+                if (pocet > 0) {
+                    statsHtml += `<li style="border-left-color: ${p.barva};"><strong>${p.nazev}:</strong> ${pocet}×</li>`;
+                }
+            });
+            if (statsHtml === '<ul>') statsHtml += '<li>Žádné poruchy nenalezeny.</li>';
+            statsHtml += '</ul>';
+            statsContainer.innerHTML = statsHtml;
+        }
+
+        function compare() {
+            const textA = document.getElementById('textA').value;
+            const textB = document.getElementById('textB').value;
+            const analyzaA = analyzeText(textA);
+            const analyzaB = analyzeText(textB);
+
+            renderAnalyza(analyzaA.vysledky, 'resultA', 'statsA');
+            renderAnalyza(analyzaB.vysledky, 'resultB', 'statsB');
+
+            // Legenda
+            const legendaHtml = PORUCHY.map(p => 
+                `<div class="legend-item"><span class="color-box" style="background:${p.barva};"></span> ${p.nazev}</div>`
+            ).join('');
+            document.getElementById('legend').innerHTML = '<strong>Legenda:</strong> ' + legendaHtml;
+        }
+
+        // Detektory (stejné jako v analyza.html)
+        function detekujOpakovani(veta, vety, index) {
+            if (index === 0) return false;
+            const slova = veta.split(/\s+/);
+            const slovaPredchozi = vety[index-1].split(/\s+/);
+            return slova.some(s => slovaPredchozi.includes(s) && s.length > 3);
+        }
+        function detekujPretrzeni(veta) {
+            return veta.includes('…') || veta.includes('..') || veta.includes('prostě') || veta.includes('no nic');
+        }
+        function detekujPrazdnaSlova(veta) {
+            const slova = veta.toLowerCase().split(/\s+/);
+            return PRAZDNA_SLOVA.some(ps => slova.includes(ps));
+        }
+        function detekujCiziTeleso(veta, vety, index) {
+            const vsechnaSlova = vety.flatMap(v => v.split(/\s+/).map(s => s.toLowerCase().replace(/[.,!?]/g, '')));
+            const slovaVety = veta.split(/\s+/).map(s => s.toLowerCase().replace(/[.,!?]/g, ''));
+            return slovaVety.some(slovo => {
+                if (slovo.length < CIZI_TELESO_MIN_DELKA) return false;
+                const pocet = vsechnaSlova.filter(s => s === slovo).length;
+                return pocet === 1;
+            });
+        }
+        function detekujTicho(veta) {
+            return veta.trim() === '' || veta.includes('(mlčí)') || veta === '…';
+        }
+    </script>
+</body>
+</html>
