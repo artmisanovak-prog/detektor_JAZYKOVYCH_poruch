@@ -1,5 +1,5 @@
 # 🤿 detektor-JAZYKOVYCH-poruch
-
+---
 ## 🕵️ Nástroj pro analýzu výpovědí
 
 Pomocník pro vyšetřovatele, soudce, právníky – a kohokoli, kdo pracuje s textem a potřebuje v něm vidět skryté vzorce.
