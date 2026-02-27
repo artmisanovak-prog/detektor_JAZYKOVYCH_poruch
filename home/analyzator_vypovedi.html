@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Jazykový analyzátor</title>
+<style>
+    body {
+    font-family: Arial, sans-serif;
+    margin: 40px;
+    max-width: 900px;
+}
+
+textarea {
+    width: 100%;
+    height: 200px;
+    margin-bottom: 20px;
+    padding: 10px;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#vystup {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    min-height: 150px;
+}
+
+.znak {
+    display:inline-block;
+    width:20px;
+    height:10px;
+    margin-right:5px;
+}
+
+.highlight {
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+/* Barvy signálů */
+.zmena-navaznosti { background:#ff6666; }
+.preskok { background:#66b3ff; }
+.cizi-teleso { background:#ff9900; }
+.pauza { background:#cccccc; }
+.tempo { background:#99ccff; }
+.delka-vet { background:#ffff66; }
+.vypln { background:#66ccff; }
+.posun-tematu { background:#99ff99; }
+.fixace { background:#ffcc66; }
+.syntax { background:#ff6699; }
+.role { background:#cc99ff; }
+.cas { background:#ffccff; }
+    </style>
+</head>
+
+<body>
+
+<h1>Jazykový analyzátor výpovědí</h1>
+
+<textarea id="inputText" placeholder="Vložte text výpovědi..."></textarea>
+<button onclick="analyzuj()">Analyzovat</button>
+
+<h2>Výsledek</h2>
+<div id="vystup"></div>
+
+<h2>Legenda</h2>
+<div id="legenda">
+  <p><span class="znak zmena-navaznosti"></span> Změna návaznosti</p>
+  <p><span class="znak preskok"></span> Přeskok</p>
+  <p><span class="znak cizi-teleso"></span> Nový izolovaný detail</p>
+  <p><span class="znak pauza"></span> Pauza / ticho</p>
+  <p><span class="znak tempo"></span> Změna tempa</p>
+  <p><span class="znak delka-vet"></span> Změna délky vět</p>
+  <p><span class="znak vypln"></span> Výplňová slova</p>
+  <p><span class="znak posun-tematu"></span> Posun tématu</p>
+  <p><span class="znak fixace"></span> Fixace</p>
+  <p><span class="znak syntax"></span> Rozpad syntaxe</p>
+  <p><span class="znak role"></span> Změna role</p>
+  <p><span class="znak cas"></span> Změna časové roviny</p>
+</div>
+
+<script>
+    function analyzuj() {
+    let text = document.getElementById("inputText").value;
+
+    // 1) Výplňová slova
+    const vypln = ["prostě","jakoby","vlastně","no","že jo","teda","jako"];
+    vypln.forEach(w => {
+        let reg = new RegExp("\\b" + w + "\\b","gi");
+        text = text.replace(reg, `<span class="highlight vypln">${w}</span>`);
+    });
+
+    // 2) Pauzy
+    text = text.replace(/\.\.\.|…/g, `<span class="highlight pauza">…</span>`);
+    text = text.replace(/\(\s*mlčí\s*\)/gi, `<span class="highlight pauza">(mlčí)</span>`);
+
+    // 3) Cizí těleso (slovo, které se objeví jen jednou)
+    let plain = text.replace(/<[^>]+>/g,"");
+    let slova = plain.toLowerCase().split(/\s+/);
+    let pocet = {};
+    slova.forEach(s => pocet[s] = (pocet[s]||0)+1);
+
+    Object.keys(pocet).forEach(s => {
+        if (pocet[s] === 1 && s.length > 4) {
+            let reg = new RegExp("\\b" + s + "\\b","gi");
+            text = text.replace(reg, `<span class="highlight cizi-teleso">${s}</span>`);
+        }
+    });
+
+    // 4) Změna role
+    text = text.replace(/\bjá\b/gi, `<span class="highlight role">já</span>`);
+    text = text.replace(/\bmy\b/gi, `<span class="highlight role">my</span>`);
+    text = text.replace(/\boni\b/gi, `<span class="highlight role">oni</span>`);
+
+    // 5) Změna času
+    text = text.replace(/\bbyl\b/gi, `<span class="highlight cas">byl</span>`);
+    text = text.replace(/\bje\b/gi, `<span class="highlight cas">je</span>`);
+    text = text.replace(/\bbude\b/gi, `<span class="highlight cas">bude</span>`);
+
+    // 6) Rozpad syntaxe (věty < 3 slova)
+    text = text.replace(/(^|\.)\s*([A-Za-zěščřžýáíéůúó]+\s+[A-Za-zěščřžýáíéůúó]+)(\.|$)/g,
+        (m,p1,short,p3)=>`${p1}<span class="highlight syntax">${short}</span>${p3}`);
+
+    // 7) Fixace (opakování stejné věty)
+    text = text.replace(/(.+?)\s*\1/gi, `<span class="highlight fixace">$1</span>`);
+
+    // 8) Posun tématu
+    text = text.replace(/(?:\.|\n)\s*(On|Ona|Oni|Já)/g,
+        `<span class="highlight posun-tematu">$1</span>`);
+
+    // 9) Přeskok
+    text = text.replace(/\bale\b|\bjenže\b|\bkaždopádně\b/gi,
+        m => `<span class="highlight preskok">${m}</span>`);
+
+    // 10) Změna tempa (dlouhé věty)
+    text = text.replace(/([^.]{120,})\./g,
+        `<span class="highlight tempo">$1</span>.`);
+
+    // 11) Změna délky vět (krátké vs dlouhé)
+    text = text.replace(/([^.]{1,20})\./g,
+        `<span class="highlight delka-vet">$1</span>.`);
+
+    // 12) Změna návaznosti
+    text = text.replace(/\.\s*(A|Takže|Proto)/g,
+        m => `<span class="highlight zmena-navaznosti">${m}</span>`);
+
+    document.getElementById("vystup").innerHTML = text;
+}
+</script>
+</body>
+</html>
