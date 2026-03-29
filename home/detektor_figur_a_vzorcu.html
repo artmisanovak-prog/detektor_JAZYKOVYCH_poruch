@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chceš myš? – Detektor figur a mezer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: #fefaf5;
+            color: #1a1a1a;
+            padding: 2rem 1rem;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        /* Hlavička s logem a názvem systému */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e0d6cc;
+            padding-bottom: 0.8rem;
+        }
+        .logo {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }
+        .logo-placeholder {
+            width: 48px;
+            height: 48px;
+            background: #e0d6cc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+        .system-title {
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #a55;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: normal;
+            margin: 0.5rem 0 0.2rem;
+        }
+        .sub {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #fff;
+            resize: vertical;
+            min-height: 200px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+        button {
+            background: #2c3e2f;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button.secondary {
+            background: #7a6a5a;
+        }
+        .two-columns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        .figures-panel {
+            flex: 1.2;
+            min-width: 280px;
+        }
+        .text-panel {
+            flex: 1.8;
+            min-width: 280px;
+        }
+        .results-table {
+            background: #fff;
+            border: 1px solid #e0d6cc;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th, td {
+            border-bottom: 1px solid #e0d6cc;
+            padding: 0.8rem 0.6rem;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #f5efe8;
+            font-weight: 600;
+        }
+        .figure-row {
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .figure-row:hover {
+            background: #faf0e8;
+        }
+        .figure-row.active {
+            background: #e8e0d0;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .badge-yes {
+            background: #2c5e2a;
+            color: white;
+        }
+        .badge-no {
+            background: #a55;
+            color: white;
+        }
+        .example-text {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: #555;
+            margin-top: 0.2rem;
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .detail-panel {
+            background: #f5efe8;
+            border-radius: 8px;
+            padding: 0.8rem;
+            margin-top: 1rem;
+            display: none;
+            font-size: 0.85rem;
+        }
+        .detail-panel h4 {
+            margin-bottom: 0.3rem;
+            color: #a55;
+        }
+        .highlighted-text {
+            background: #fffef8;
+            border: 1px solid #e0d6cc;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .hl {
+            background-color: #ffecb3;
+            border-radius: 3px;
+            padding: 0 2px;
+            transition: background 0.2s;
+        }
+        footer {
+            margin-top: 2rem;
+            font-size: 0.7rem;
+            color: #888;
+            text-align: center;
+            border-top: 1px solid #e0d6cc;
+            padding-top: 1rem;
+        }
+        @media (max-width: 800px) {
+            .two-columns {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Hlavička s logem a názvem systému -->
+    <div class="header">
+        <img id="logoImg" class="logo" src="doma/ikona_mys.png" alt="myš" onerror="this.style.display='none'; document.getElementById('logoPlaceholder').style.display='flex';">
+        <div id="logoPlaceholder" class="logo-placeholder" style="display:none;">🐁</div>
+        <div>
+            <div class="system-title">Chceš myš? – Slovník mezer</div>
+            <h1>🔍 Detektor figur a mezer</h1>
+        </div>
+    </div>
+    <div class="sub">Zjišťuje přítomnost / nepřítomnost jazykových figur. Kliknutím na řádek zobrazíte detail a zvýrazníte místo v textu.</div>
+
+    <textarea id="inputText" placeholder="Vložte text (výpověď, smlouvu, email, přepis výslechu…)"></textarea>
+    <div class="btn-group">
+        <button id="analyzeBtn">🔎 Analyzovat</button>
+        <button id="clearBtn" class="secondary">✕ Smazat</button>
+    </div>
+
+    <div id="resultsPanel" style="display: none;">
+        <div class="two-columns">
+            <div class="figures-panel">
+                <div class="results-table">
+                    <table id="figuresTable">
+                        <thead>
+                            <tr><th>Figura / jev</th><th>Stav</th><th>Ukázka</th></tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+                <div id="detailPanel" class="detail-panel"></div>
+            </div>
+            <div class="text-panel">
+                <div id="highlightContainer" class="highlighted-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>Nástroj pouze ukazuje přítomnost či nepřítomnost figur – žádné hodnocení. Interpretace patří uživateli v kontextu případu.</footer>
+</div>
+
+<script>
+    // ============================================================
+    //  KNIHOVNA FIGUR (16 figur) – každá s detekcí a popisem
+    // ============================================================
+    const FIGURES_LIST = [
+        {
+            id: "anafora",
+            name: "Anafora",
+            desc: "Opakování stejného slova na začátku sousedních vět.",
+            forensic: "V běžné výpovědi vzácné; časté u naučených, rétoricky připravených textů.",
+            rule: "Dvě po sobě jdoucí věty začínají stejným slovem.",
+            detect: (text, sentences, fullText) => {
+                for (let i = 1; i < sentences.length; i++) {
+                    const prevFirst = sentences[i-1].trim().split(/\s+/)[0];
+                    const currFirst = sentences[i].trim().split(/\s+/)[0];
+                    if (prevFirst && currFirst && prevFirst.toLowerCase() === currFirst.toLowerCase()) {
+                        return { present: true, example: `"${sentences[i].substring(0,60)}…"`, highlightSentence: sentences[i] };
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "polysyndeton",
+            name: "Polysyndeton",
+            desc: "Nadbytek spojek (a, i, nebo, ale, však).",
+            forensic: "Může signalizovat emoční přetok, bezbřehost, nebo snahu o slavnostnost.",
+            rule: "Věta, kde poměr spojek k počtu slov > 0,15.",
+            detect: (text, sentences) => {
+                for (let s of sentences) {
+                    const conj = (s.match(/\b(a|i|nebo|ale|však|ani|či)\b/gi)||[]).length;
+                    const words = s.split(/\s+/).length;
+                    if (words > 0 && conj / words > 0.15) {
+                        return { present: true, example: s.substring(0,60), highlightSentence: s };
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "hypotaxe",
+            name: "Hypotaxe",
+            desc: "Složitá souvětí s podřadnými větami.",
+            forensic: "Signalizuje racionalitu, odbornost; v mluveném projevu často značí připravenost.",
+            rule: "Věta obsahující alespoň 2 podřadné spojky (který, že, aby, protože, když…).",
+            detect: (text, sentences) => {
+                for (let s of sentences) {
+                    const sub = (s.match(/\b(který|že|aby|protože|když|jestliže|ačkoli|jakmile|dokud|pokud)\b/gi)||[]).length;
+                    if (sub >= 2) {
+                        return { present: true, example: s.substring(0,60), highlightSentence: s };
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "parataxe",
+            name: "Parataxe",
+            desc: "Krátké věty, často hlavní.",
+            forensic: "Dynamika, přímost, typické pro mluvený projev, může značit spontánnost.",
+            rule: "Věta o ≤ 6 slovech.",
+            detect: (text, sentences) => {
+                for (let s of sentences) {
+                    if (s.split(/\s+/).length <= 6) {
+                        return { present: true, example: s, highlightSentence: s };
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "tempus_shift",
+            name: "Změna času",
+            desc: "Střídání minulého, přítomného a budoucího času.",
+            forensic: "Emoční zaujetí, trauma, nebo nesoulad v rekonstrukci děje.",
+            rule: "Text obsahuje minulý i přítomný (nebo budoucí) čas.",
+            detect: (text, sentences, fullText) => {
+                const hasPast = /\b(byl|byla|bylo|byli|šel|šla|řekl|řekla|viděl|viděla|udělal|udělala)\b/i.test(fullText);
+                const hasPresent = /\b(je|jsou|mám|máš|má|jde|říká|vidí|cítí|dělá)\b/i.test(fullText);
+                const hasFuture = /\b(bude|budu|budeme|půjde|přijde|udělá)\b/i.test(fullText);
+                const present = hasPast && (hasPresent || hasFuture);
+                // Najdeme větu, kde se střídají (zjednodušeně – první věta s minulým a přítomným)
+                let ex = null;
+                for (let s of sentences) {
+                    if (/\b(byl|byla|bylo|šel|šla)\b/i.test(s) && /\b(je|jsou|má|jde)\b/i.test(s)) {
+                        ex = s.substring(0,60);
+                        break;
+                    }
+                }
+                return { present, example: present ? (ex || "časová změna detekována") : null, highlightSentence: ex ? sentences.find(s => s.includes(ex?.substring(0,30))) : null };
+            }
+        },
+        {
+            id: "role_shift",
+            name: "Změna role",
+            desc: "Střídání 1. a 3. osoby.",
+            forensic: "Svědek přepíná mezi vlastní zkušeností a doslechem; podezření na nepůvodní informaci.",
+            rule: "Text obsahuje 1. osobu (já, my) i 3. osobu (on, ona, oni).",
+            detect: (text, sentences, fullText) => {
+                const hasFirst = /\b(já|jsem|mě|mi|můj|moje|my|nás)\b/i.test(fullText);
+                const hasThird = /\b(on|ona|ono|oni|jej|jeho|její|jejich)\b/i.test(fullText);
+                const present = hasFirst && hasThird;
+                let ex = null;
+                for (let s of sentences) {
+                    if (/\b(já|jsem|my)\b/i.test(s) && /\b(on|ona|oni)\b/i.test(s)) {
+                        ex = s.substring(0,60);
+                        break;
+                    }
+                }
+                return { present, example: present ? (ex || "změna role detekována") : null, highlightSentence: ex ? sentences.find(s => s.includes(ex?.substring(0,30))) : null };
+            }
+        },
+        {
+            id: "negace",
+            name: "Negace",
+            desc: "Záporná slova, popírání.",
+            forensic: "Obranný postoj, vyhýbavost, může indikovat klamání.",
+            rule: "Věta obsahující alespoň 2 záporné výrazy (ne, není, nikdo, nic, nikdy…).",
+            detect: (text, sentences) => {
+                for (let s of sentences) {
+                    const neg = (s.match(/\b(ne|není|nejsem|nemá|nemám|nikdo|nic|nikdy|nikde|nijak)\b/gi)||[]).length;
+                    if (neg >= 2) {
+                        return { present: true, example: s.substring(0,60), highlightSentence: s };
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "elipsa",
+            name: "Elipsa",
+            desc: "Vynechání podmětu (zejména „já“) u slovesa.",
+            forensic: "Snaha vyhnout se osobní odpovědnosti, zamlčení agens.",
+            rule: "Věta se slovesem minulého času nebo dějovým slovesem bez vyjádřeného „já“.",
+            detect: (text, sentences) => {
+                for (let s of sentences) {
+                    if (/\b(šel|šla|řekl|řekla|viděl|viděla|udělal|udělala|byl|byla|měl|měla)\b/i.test(s) && !/\b(já|jsem)\b/i.test(s)) {
+                        return { present: true, example: s.substring(0,60), highlightSentence: s };
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "parenteze",
+            name: "Parenteze",
+            desc: "Vsuvky oddělené čárkami, závorkami, pomlčkami.",
+            forensic: "Dodatečné upřesňování, ladění výpovědi za běhu – může značit konstruování nepravdivé verze.",
+            rule: "Přítomnost závorek, pomlček, uvozovek nebo vsuvek.",
+            detect: (text, sentences) => {
+                for (let s of sentences) {
+                    if (/[–—]|\(|\)|„[^"]*“/.test(s)) {
+                        return { present: true, example: s.substring(0,60), highlightSentence: s };
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "fixace",
+            name: "Fixace",
+            desc: "Opakování stejného slova v krátkém úseku.",
+            forensic: "Stres, zahlcování, nedostatek slovní zásoby, nebo úmyslné zdůraznění.",
+            rule: "Stejné slovo delší než 3 znaky se v textu vyskytuje alespoň 3×.",
+            detect: (text, sentences, fullText) => {
+                const words = fullText.toLowerCase().split(/\s+/).map(w=>w.replace(/[.,!?;:]/g,''));
+                const freq = {};
+                words.forEach(w=>{ if(w.length>3) freq[w]=(freq[w]||0)+1; });
+                const repeated = Object.entries(freq).find(([w,c])=>c>=3);
+                if (repeated) {
+                    const word = repeated[0];
+                    // najít první větu obsahující toto slovo
+                    const sent = sentences.find(s => new RegExp(`\\b${word}\\b`,'i').test(s));
+                    return { present: true, example: `slovo "${word}" se opakuje ${repeated[1]}×`, highlightSentence: sent || sentences[0] };
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "hyperbola",
+            name: "Hyperbola",
+            desc: "Nadsázka, přehánění.",
+            forensic: "Emoční přetlak, snaha zdůraznit pravdivost, může být manipulativní.",
+            rule: "Výskyt superlativů (nej-), absolutizujících výrazů (absolutně, naprosto, vždy, nikdy).",
+            detect: (text, sentences) => {
+                for (let s of sentences) {
+                    if (/\b(nej|absolutně|naprosto|totálně|vůbec|vždy|nikdy|tisíckrát|milokrát)\b/i.test(s)) {
+                        return { present: true, example: s.substring(0,60), highlightSentence: s };
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "gradace",
+            name: "Gradace",
+            desc: "Stupňování intenzity (délky vět, síly výrazů).",
+            forensic: "Budování napětí, promyšlená rétorická struktura.",
+            rule: "Délky vět dvakrát po sobě rostou nebo klesají.",
+            detect: (text, sentences) => {
+                const lens = sentences.map(s=>s.split(/\s+/).length);
+                for (let i=2;i<lens.length;i++) {
+                    if ((lens[i] > lens[i-1] && lens[i-1] > lens[i-2]) || (lens[i] < lens[i-1] && lens[i-1] < lens[i-2])) {
+                        return { present: true, example: `větné délky: ${lens[i-2]} → ${lens[i-1]} → ${lens[i]}`, highlightSentence: sentences[i] };
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "kontrast",
+            name: "Kontrast",
+            desc: "Protiklad vyjádřený spojkami.",
+            forensic: "Vymezování postoje, racionální argumentace, obranná strategie.",
+            rule: "Výskyt spojek ale, avšak, naopak, přesto, i tak.",
+            detect: (text, sentences) => {
+                for (let s of sentences) {
+                    if (/\b(ale|avšak|naopak|přesto|i\s+tak)\b/i.test(s)) {
+                        return { present: true, example: s.substring(0,60), highlightSentence: s };
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "ironie",
+            name: "Ironie / výsměch",
+            desc: "Spojení kladného a záporného tvrzení s kontrastem.",
+            forensic: "Obranná reakce, nadhled, nebo snaha o diskreditaci.",
+            rule: "V jedné větě sloveso být + negace + kontrastní spojka (ale, však).",
+            detect: (text, sentences) => {
+                for (let s of sentences) {
+                    if (/\b(byl|byla|bylo|je|jsou|jsem|jsi)\b/i.test(s) && /\b(ne|není|nejsem)\b/i.test(s) && /\b(ale|však|přesto)\b/i.test(s)) {
+                        return { present: true, example: s.substring(0,60), highlightSentence: s };
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "deklarace",
+            name: "Deklarace / performativum",
+            desc: "Prohlašovací slovesa v 1. osobě.",
+            forensic: "Vytváří závazek, dodává výpovědi váhu; často citace právní formulace.",
+            rule: "Výskyt slov prohlašuji, slibuji, potvrzuji, konstatuji, tvrdím, říkám že.",
+            detect: (text, sentences) => {
+                for (let s of sentences) {
+                    if (/\b(prohlašuji|slibuji|potvrzuji|konstatuji|tvrdím|říkám\s+že)\b/i.test(s)) {
+                        return { present: true, example: s.substring(0,60), highlightSentence: s };
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        },
+        {
+            id: "metafora",
+            name: "Metafora",
+            desc: "Přenos významu (X je Y).",
+            forensic: "Obrazné vyjadřování, kreativita, někdy snaha o poetizaci nebo zastření.",
+            rule: "Struktura podstatné jméno + je/byl + podstatné jméno, bez zájmena před 'je'.",
+            detect: (text, sentences) => {
+                for (let s of sentences) {
+                    const match = s.match(/\b\w{3,}\s+(je|jsou|byl|byla)\s+\w{3,}\b/i);
+                    if (match) {
+                        const before = s.substring(0, match.index).toLowerCase();
+                        if (!/\b(já|ty|on|ona|ono|my|vy|oni)\b/.test(before)) {
+                            return { present: true, example: match[0], highlightSentence: s };
+                        }
+                    }
+                }
+                return { present: false, example: null, highlightSentence: null };
+            }
+        }
+    ];
+
+    // Pomocné funkce
+    function splitSentences(text) {
+        return text.split(/(?<=[.!?…])\s+|(?<=…)\s*|\n(?=\S)/).map(s=>s.trim()).filter(s=>s.length>1);
+    }
+
+    let currentHighlightSentence = null;
+    let currentFullText = "";
+
+    function analyzeText() {
+        const text = document.getElementById('inputText').value.trim();
+        if (!text) {
+            alert('Vložte text.');
+            return;
+        }
+        currentFullText = text;
+        const sentences = splitSentences(text);
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        const figureResults = [];
+
+        // Detekce každé figury
+        for (let fig of FIGURES_LIST) {
+            const result = fig.detect(text, sentences, text);
+            figureResults.push({ fig, result });
+        }
+
+        // Vytvoření tabulky
+        figureResults.forEach(({ fig, result }) => {
+            const row = document.createElement('tr');
+            row.className = 'figure-row';
+            row.setAttribute('data-figure-id', fig.id);
+            row.setAttribute('data-example', result.example || '');
+            row.setAttribute('data-highlight', result.highlightSentence || '');
+            const badge = result.present ? '<span class="badge badge-yes">Ano</span>' : '<span class="badge badge-no">Ne</span>';
+            const exampleHtml = result.example ? `<div class="example-text">📌 ${escapeHtml(result.example)}</div>` : '<div class="example-text">—</div>';
+            row.innerHTML = `
+                <td><strong>${fig.name}</strong><br><span style="font-size:0.7rem; color:#777;">${fig.desc}</span></td>
+                <td>${badge}</td>
+                <td>${exampleHtml}</td>
+            `;
+            row.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showDetail(fig, result);
+                highlightSentenceInText(result.highlightSentence);
+                // označení aktivního řádku
+                document.querySelectorAll('.figure-row').forEach(r => r.classList.remove('active'));
+                row.classList.add('active');
+            });
+            tbody.appendChild(row);
+        });
+
+        document.getElementById('resultsPanel').style.display = 'block';
+        // Zobrazíme celý text v pravém panelu
+        document.getElementById('highlightContainer').innerHTML = escapeHtml(text).replace(/\n/g,'<br>');
+    }
+
+    function showDetail(fig, result) {
+        const panel = document.getElementById('detailPanel');
+        const status = result.present ? 'Přítomno' : 'Nepřítomno';
+        const exampleText = result.example ? `<p><strong>Ukázka:</strong> ${escapeHtml(result.example)}</p>` : '';
+        panel.innerHTML = `
+            <h4>${fig.name}</h4>
+            <p><strong>Popis:</strong> ${fig.desc}</p>
+            <p><strong>Forenzní význam:</strong> ${fig.forensic}</p>
+            <p><strong>Detekční pravidlo:</strong> ${fig.rule}</p>
+            <p><strong>Výsledek:</strong> ${status}</p>
+            ${exampleText}
+            <button id="closeDetailBtn" style="margin-top:0.5rem; background:#7a6a5a;">✖ Zavřít</button>
+        `;
+        panel.style.display = 'block';
+        document.getElementById('closeDetailBtn')?.addEventListener('click', () => {
+            panel.style.display = 'none';
+        });
+    }
+
+    function highlightSentenceInText(sentence) {
+        const container = document.getElementById('highlightContainer');
+        if (!container || !sentence) return;
+        let html = escapeHtml(currentFullText);
+        // Zvýrazníme přesnou shodu věty (ořízneme bílé znaky)
+        const trimmed = sentence.trim();
+        if (trimmed) {
+            const escaped = escapeHtml(trimmed);
+            const regex = new RegExp(`(${escaped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            html = html.replace(regex, `<span class="hl">$1</span>`);
+        }
+        container.innerHTML = html.replace(/\n/g,'<br>');
+        // Posuneme k prvnímu zvýraznění
+        const firstHl = container.querySelector('.hl');
+        if (firstHl) firstHl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Event listeners
+    document.getElementById('analyzeBtn').addEventListener('click', analyzeText);
+    document.getElementById('clearBtn').addEventListener('click', () => {
+        document.getElementById('inputText').value = '';
+        document.getElementById('resultsPanel').style.display = 'none';
+        document.getElementById('detailPanel').style.display = 'none';
+        currentFullText = '';
+    });
+
+    // Pokus o načtení obrázku – pokud neexistuje, ukáže se placeholder
+    const img = document.getElementById('logoImg');
+    img.onerror = () => {
+        img.style.display = 'none';
+        document.getElementById('logoPlaceholder').style.display = 'flex';
+    };
+</script>
+</body>
+</html>
