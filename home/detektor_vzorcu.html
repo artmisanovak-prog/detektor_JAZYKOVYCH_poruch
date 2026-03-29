@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detektor vzorců – 12 jazykových profilů</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: #fefaf5;
+            color: #1a1a1a;
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: normal;
+            border-left: 4px solid #a55;
+            padding-left: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .sub {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #fff;
+            resize: vertical;
+            min-height: 180px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+        button {
+            background: #2c3e2f;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover {
+            background: #1f2c21;
+        }
+        button.secondary {
+            background: #7a6a5a;
+        }
+        .results {
+            margin-top: 1.5rem;
+        }
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .profile-card {
+            background: #fff;
+            border: 1px solid #e0d6cc;
+            border-radius: 8px;
+            padding: 1rem;
+            transition: 0.1s;
+        }
+        .profile-card.active {
+            border-left: 6px solid #a55;
+            background: #fffbf5;
+        }
+        .profile-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+        .profile-desc {
+            font-size: 0.8rem;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+        .profile-status {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        .status-true {
+            color: #2c5e2a;
+            font-weight: bold;
+        }
+        .status-false {
+            color: #a55;
+        }
+        .profile-detail {
+            font-size: 0.7rem;
+            color: #777;
+            border-top: 1px solid #eee;
+            margin-top: 0.5rem;
+            padding-top: 0.3rem;
+        }
+        .figures-panel {
+            background: #f5efe8;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .figures-table {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.3rem;
+            font-size: 0.75rem;
+        }
+        .fig-item {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #e0d6cc;
+            padding: 0.2rem 0;
+        }
+        .warning {
+            background: #fff0e0;
+            border-left: 4px solid #c77;
+            padding: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+        }
+        footer {
+            margin-top: 2rem;
+            font-size: 0.7rem;
+            color: #888;
+            text-align: center;
+            border-top: 1px solid #e0d6cc;
+            padding-top: 1rem;
+        }
+        @media (max-width: 700px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔍 Detektor vzorců – 12 jazykových profilů</h1>
+    <div class="sub">Kombinace základních figur odhaluje vyšší významové vzorce v textu. Výsledky jsou pouze podnětem k interpretaci.</div>
+
+    <textarea id="inputText" placeholder="Vložte text (výpověď, email, smlouvu, literární ukázku…)"></textarea>
+    <div class="btn-group">
+        <button id="analyzeBtn">🧠 Detekovat profily</button>
+        <button id="clearBtn" class="secondary">✕ Smazat</button>
+    </div>
+
+    <div id="resultsPanel" style="display: none;">
+        <div class="figures-panel" id="figuresPanel"></div>
+        <div class="profile-grid" id="profileGrid"></div>
+        <div id="warningMsg" class="warning" style="display: none;"></div>
+    </div>
+
+    <footer>
+        Detektor vzorců – offline nástroj pro forenzní lingvistiku. Profily jsou definovány jako kombinace figur s pevnými prahy. Žádné strojové učení, jen transparentní pravidla.
+    </footer>
+</div>
+
+<script>
+// ============================================================
+//  KNIHOVNA FIGUR (stejná jako v Mapování figur)
+// ============================================================
+
+const FIGURES = [
+    { id: "anafora", name: "Anafora", detectMicro: (s, idx, sents) => idx>0 && sents[idx-1].trim().split(/\s+/)[0]?.toLowerCase() === s.trim().split(/\s+/)[0]?.toLowerCase() },
+    { id: "polysyndeton", name: "Polysyndeton", detectMicro: (s) => (s.match(/\b(a|i|nebo|ale|však|ani|či)\b/gi)||[]).length / Math.max(s.split(/\s+/).length,1) > 0.15 },
+    { id: "hypotaxe", name: "Hypotaxe", detectMicro: (s) => (s.match(/\b(který|že|aby|protože|když|jestliže|ačkoli|jakmile|dokud|pokud)\b/gi)||[]).length >= 2 },
+    { id: "parataxe", name: "Parataxe", detectMicro: (s) => s.split(/\s+/).length <= 6 },
+    { id: "tempus_shift", name: "Změna času", detectMacro: (text) => /\b(byl|byla|bylo|byli|šel|šla|řekl|řekla)\b/i.test(text) && /\b(je|jsou|má|mám|jde|říká|vidí)\b/i.test(text) },
+    { id: "role_shift", name: "Změna role", detectMacro: (text) => /\b(já|jsem|mě|mi|můj|moje|my|nás)\b/i.test(text) && /\b(on|ona|ono|oni|jej|jeho|její)\b/i.test(text) },
+    { id: "negace", name: "Negace", detectMicro: (s) => (s.match(/\b(ne|není|nejsem|nemá|nemám|nikdo|nic|nikdy|nikde|nijak)\b/gi)||[]).length >= 2 },
+    { id: "elipsa", name: "Elipsa", detectMicro: (s) => /\b(šel|šla|řekl|řekla|viděl|viděla|udělal|udělala|byl|byla|měl|měla)\b/i.test(s) && !/\b(já|jsem)\b/i.test(s) },
+    { id: "parenteze", name: "Parenteze", detectMicro: (s) => /[–—]|\(|\)|„[^"]*“/.test(s) },
+    { id: "fixace", name: "Fixace", detectMacro: (text) => { const words = text.toLowerCase().split(/\s+/).map(w=>w.replace(/[.,!?;:]/g,'')); const freq={}; words.forEach(w=>{if(w.length>3)freq[w]=(freq[w]||0)+1;}); return Object.values(freq).some(c=>c>=3); } },
+    { id: "hyperbola", name: "Hyperbola", detectMicro: (s) => /\b(nej|absolutně|naprosto|totálně|vůbec|vždy|nikdy|tisíckrát|milokrát)\b/i.test(s) },
+    { id: "gradace", name: "Gradace", detectMacro: (text,sentences) => { const lens=sentences.map(s=>s.split(/\s+/).length); let inc=0,dec=0; for(let i=2;i<lens.length;i++){if(lens[i]>lens[i-1]&&lens[i-1]>lens[i-2])inc++;if(lens[i]<lens[i-1]&&lens[i-1]<lens[i-2])dec++;} return inc>=2||dec>=2; } },
+    { id: "kontrast", name: "Kontrast", detectMicro: (s) => /\b(ale|avšak|naopak|přesto|i\s+tak)\b/i.test(s) },
+    { id: "ironie", name: "Ironie", detectMicro: (s) => /\b(byl|byla|bylo|je|jsou|jsem|jsi)\b/i.test(s) && /\b(ne|není|nejsem)\b/i.test(s) && /\b(ale|však|přesto)\b/i.test(s) },
+    { id: "deklarace", name: "Deklarace", detectMicro: (s) => /\b(prohlašuji|slibuji|potvrzuji|konstatuji|tvrdím|říkám\s+že)\b/i.test(s) },
+    { id: "metafora", name: "Metafora", detectMicro: (s) => { const m=s.match(/\b\w{3,}\s+(je|jsou|byl|byla)\s+\w{3,}\b/i); if(!m)return false; const before=s.substring(0,m.index).toLowerCase(); return !/\b(já|ty|on|ona|ono|my|vy|oni)\b/.test(before); } },
+    { id: "prirovnani", name: "Přirovnání", detectMicro: (s) => /\b(jako|podobně\s+jako|jako\s+by)\b/i.test(s) },
+    { id: "personifikace", name: "Personifikace", detectMicro: (s) => /\b(ticho|čas|světlo|tma|věc|slovo|myšlenka|vítr|voda|zbraň|nůž|dům|auto)\b/i.test(s) && /\b(řekl|říká|myslí|cítí|ví|chce|rozhodl|smál|plakal|volal|slyší)\b/i.test(s) },
+    { id: "synestezie", name: "Synestezie", detectMicro: (s) => { const sense=[/\b(barva|červen|modr|zelen|žlut|bíl|čern|tmav|světl|vidět|pohled)\b/i,/\b(zvuk|tón|hluk|šum|tich|hlas|slyšet|hučet|hřmět)\b/i,/\b(chuť|sladk|kysel|hořk|slan|ochutnat|chutnat)\b/i,/\b(dotek|hladk|hrub|tepl|studen|cítit|dotýkat)\b/i,/\b(vůně|zápach|vonět|páchnout|aroma)\b/i]; let cnt=0; sense.forEach(r=>{if(r.test(s))cnt++;}); return cnt>=2; } },
+    { id: "onomatopoeia", name: "Onomatopoeia", detectMicro: (s) => /\b(bum|prásk|žbluňk|šum|huk|šust|bzzz|mňau|haf|čvacht|klap|cink|břink)\b/i.test(s) }
+];
+
+function splitSentences(text) {
+    return text.split(/(?<=[.!?…])\s+|(?<=…)\s*|\n(?=\S)/).map(s=>s.trim()).filter(s=>s.length>1);
+}
+
+function detectFigures(text) {
+    const sentences = splitSentences(text);
+    const wordCount = text.split(/\s+/).filter(w=>w.length>0).length;
+    const results = {};
+    FIGURES.forEach(fig => {
+        let count = 0;
+        if (fig.detectMicro) {
+            sentences.forEach((s, idx) => { if (fig.detectMicro(s, idx, sentences)) count++; });
+        }
+        if (fig.detectMacro) {
+            if (fig.detectMacro(text, sentences)) count++;
+        }
+        const per100 = (count / Math.max(wordCount,1)) * 100;
+        results[fig.id] = { count, per100: per100.toFixed(1) };
+    });
+    return { results, wordCount, sentences };
+}
+
+// ============================================================
+//  DEFINICE PROFILŮ (vzorců) – 12
+// ============================================================
+
+const PROFILES = [
+    {
+        name: "Rétorická příprava",
+        desc: "Text působí stylisticky vyhlazeně, často s opakováním a složitými souvětími.",
+        check: (fig) => fig.anafora.per100 > 2 && fig.polysyndeton.per100 > 2 && fig.hypotaxe.per100 > 1.5 && fig.parenteze.per100 < 1
+    },
+    {
+        name: "Spontánní nejistota",
+        desc: "Přirozený mluvený projev s krátkými větami, váháním a opravami.",
+        check: (fig) => fig.parataxe.per100 > 20 && fig.parenteze.per100 > 1.5 && fig.elipsa.per100 > 1.5 && fig.anafora.per100 < 1
+    },
+    {
+        name: "Obranné vyhýbání",
+        desc: "Popírání, vynechávání podmětu, opakování – snaha vyhnout se odpovědnosti.",
+        check: (fig) => fig.negace.per100 > 3 && fig.elipsa.per100 > 2 && fig.fixace.per100 > 1.5
+    },
+    {
+        name: "Emoční přetok",
+        desc: "Emocionálně nabitá výpověď s nadsázkou, gradací a přeskoky časů.",
+        check: (fig) => (fig.polysyndeton.per100 > 1.5 || fig.hyperbola.per100 > 1) && (fig.gradace.per100 > 0 || fig.tempus_shift.per100 > 0)
+    },
+    {
+        name: "Narativní nestabilita",
+        desc: "Nestálá perspektiva – svědek přepíná mezi vlastní zkušeností a doslechem.",
+        check: (fig) => fig.role_shift.per100 > 0 && fig.tempus_shift.per100 > 0
+    },
+    {
+        name: "Nerealistická plynulost",
+        desc: "Text je příliš hladký, bez přirozených oprav a krátkých vět – podezření na předpřipravenost.",
+        check: (fig) => fig.parenteze.per100 < 0.8 && fig.elipsa.per100 < 0.8 && fig.hypotaxe.per100 > 2 && fig.parataxe.per100 < 12
+    },
+    {
+        name: "Fixace / zaseknutí",
+        desc: "Opakování stejných slov, neschopnost posunout se dále.",
+        check: (fig) => fig.fixace.per100 > 2.5
+    },
+    {
+        name: "Zlom v profilu",
+        desc: "Náhlá změna struktury – podezření na vloženou pasáž nebo střídání autora.",
+        check: (fig, sentences) => {
+            if (sentences.length < 8) return false;
+            const half = Math.floor(sentences.length/2);
+            const firstHalf = sentences.slice(0, half).join(' ');
+            const secondHalf = sentences.slice(half).join(' ');
+            const first = detectFigures(firstHalf).results;
+            const second = detectFigures(secondHalf).results;
+            const diffAnafora = Math.abs(first.anafora.per100 - second.anafora.per100);
+            const diffParenteze = Math.abs(first.parenteze.per100 - second.parenteze.per100);
+            const diffParataxe = Math.abs(first.parataxe.per100 - second.parataxe.per100);
+            return diffAnafora > 2 || diffParenteze > 2 || diffParataxe > 15;
+        }
+    },
+    {
+        name: "Přehnaná konkrétnost",
+        desc: "Nepřirozeně mnoho detailů (čísla, vlastní jména, smyslové popisy).",
+        check: (fig, text) => {
+            const numbers = (text.match(/\b\d+\b/g)||[]).length;
+            const proper = (text.match(/\b[A-ZÁČĎÉĚÍŇÓŘŠŤŮÚÝŽ][a-záčďéěíňóřšťůúýž]+\b/g)||[]).length;
+            const words = text.split(/\s+/).length;
+            const detailsPer100 = ((numbers + proper) / words) * 100;
+            return detailsPer100 > 8;
+        }
+    },
+    {
+        name: "Sugestibilita",
+        desc: "Vyžaduje porovnání s otázkami tazatele. Pro samostatný text nelze hodnotit.",
+        check: () => false,
+        notApplicable: true
+    },
+    {
+        name: "Koordinace výpovědí",
+        desc: "Vyžaduje porovnání více textů. Pro samostatný text nelze hodnotit.",
+        check: () => false,
+        notApplicable: true
+    },
+    {
+        name: "Neutrální baseline",
+        desc: "Žádný z výrazných profilů se neuplatňuje – text je jazykově nezatížený.",
+        check: (fig, text, sentences, activeProfiles) => {
+            // pokud není aktivní žádný jiný profil (kromě sugestibility a koordinace)
+            const otherActive = activeProfiles.filter(p => !p.notApplicable && p.active).length;
+            return otherActive === 0;
+        }
+    }
+];
+
+// ============================================================
+//  ANALÝZA A RENDER
+// ============================================================
+
+function analyze() {
+    const text = document.getElementById('inputText').value.trim();
+    if (!text) {
+        alert('Vložte text.');
+        return;
+    }
+
+    const { results: figCounts, wordCount, sentences } = detectFigures(text);
+    // Převedeme na per100 hodnoty pro snazší přístup
+    const fig = {};
+    for (let id in figCounts) {
+        fig[id] = { count: figCounts[id].count, per100: parseFloat(figCounts[id].per100) };
+    }
+
+    // Vyhodnotíme profily
+    const activeProfiles = PROFILES.map(profile => {
+        let active = false;
+        let detail = '';
+        if (profile.notApplicable) {
+            active = false;
+            detail = 'Není dostupné pro samostatný text.';
+        } else if (profile.name === "Zlom v profilu") {
+            active = profile.check(fig, sentences);
+            detail = active ? 'Detekován zlom mezi první a druhou polovinou textu.' : 'Žádný významný zlom.';
+        } else if (profile.name === "Přehnaná konkrétnost") {
+            active = profile.check(fig, text);
+            detail = active ? 'Vysoký počet čísel nebo vlastních jmen.' : 'Množství detailů v normě.';
+        } else if (profile.name === "Neutrální baseline") {
+            // předáme seznam aktivních (bez baseline)
+            const otherActive = activeProfiles.filter(p => p !== profile && !p.notApplicable && p.active).length;
+            active = otherActive === 0;
+            detail = active ? 'Nebyl detekován žádný z výrazných profilů.' : 'Text vykazuje některý z profilů.';
+        } else {
+            active = profile.check(fig);
+            detail = active ? 'Podmínky splněny.' : 'Podmínky nesplněny.';
+        }
+        return { ...profile, active, detail };
+    });
+
+    // Zobrazit výsledky
+    document.getElementById('resultsPanel').style.display = 'block';
+    renderFiguresPanel(fig, wordCount);
+    renderProfiles(activeProfiles);
+    renderWarnings(activeProfiles);
+}
+
+function renderFiguresPanel(fig, wordCount) {
+    const panel = document.getElementById('figuresPanel');
+    const items = Object.entries(fig).map(([id, data]) => `
+        <div class="fig-item">
+            <span>${FIGURES.find(f=>f.id===id)?.name || id}</span>
+            <span>${data.count}× (${data.per100} / 100 slov)</span>
+        </div>
+    `).join('');
+    panel.innerHTML = `
+        <div style="font-size:0.8rem; margin-bottom:0.5rem;"><strong>Základní figurální profil</strong> (četnosti na 100 slov)</div>
+        <div class="figures-table">${items}</div>
+        <div style="font-size:0.7rem; margin-top:0.5rem; color:#666;">Celkem slov: ${wordCount}</div>
+    `;
+}
+
+function renderProfiles(profiles) {
+    const grid = document.getElementById('profileGrid');
+    grid.innerHTML = profiles.map(p => `
+        <div class="profile-card ${p.active ? 'active' : ''}">
+            <div class="profile-name">${p.name}</div>
+            <div class="profile-desc">${p.desc}</div>
+            <div class="profile-status">
+                ${p.notApplicable ? 
+                    '<span class="status-false">📌 Není k dispozici pro samostatný text</span>' : 
+                    (p.active ? '<span class="status-true">✓ Aktivní</span>' : '<span class="status-false">✗ Neaktivní</span>')
+                }
+            </div>
+            <div class="profile-detail">${p.detail}</div>
+        </div>
+    `).join('');
+}
+
+function renderWarnings(profiles) {
+    const activeReal = profiles.filter(p => p.active && !p.notApplicable && p.name !== 'Neutrální baseline');
+    const warningDiv = document.getElementById('warningMsg');
+    if (activeReal.length > 2) {
+        warningDiv.style.display = 'block';
+        warningDiv.innerHTML = `⚠️ Upozornění: V textu se prolíná více profilů najednou (${activeReal.map(p=>p.name).join(', ')}). To může značit kombinaci různých stylů nebo nestabilitu výpovědi.`;
+    } else {
+        warningDiv.style.display = 'none';
+    }
+}
+
+// UI handlers
+document.getElementById('analyzeBtn').addEventListener('click', analyze);
+document.getElementById('clearBtn').addEventListener('click', () => {
+    document.getElementById('inputText').value = '';
+    document.getElementById('resultsPanel').style.display = 'none';
+});
+
+</script>
+</body>
+</html>
