@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chceš myš? – Detektor forenzních profilů</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: #fefaf5;
+            color: #1a1a1a;
+            padding: 2rem 1rem;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e0d6cc;
+            padding-bottom: 0.8rem;
+        }
+        .logo {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }
+        .logo-placeholder {
+            width: 48px;
+            height: 48px;
+            background: #e0d6cc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+        .system-title {
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #a55;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: normal;
+            margin: 0.5rem 0 0.2rem;
+        }
+        .sub {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #fff;
+            resize: vertical;
+            min-height: 200px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+        button {
+            background: #2c3e2f;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button.secondary {
+            background: #7a6a5a;
+        }
+        .results {
+            margin-top: 1.5rem;
+        }
+        .profile-card {
+            background: #fff;
+            border: 1px solid #e0d6cc;
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            overflow: hidden;
+        }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            background: #fff;
+            transition: background 0.1s;
+        }
+        .profile-header:hover {
+            background: #faf0e8;
+        }
+        .profile-name {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .profile-status {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .status-active {
+            background: #2c5e2a;
+            color: white;
+        }
+        .status-inactive {
+            background: #a55;
+            color: white;
+        }
+        .profile-detail {
+            display: none;
+            padding: 0.8rem 1rem;
+            background: #f5efe8;
+            border-top: 1px solid #e0d6cc;
+            font-size: 0.85rem;
+        }
+        .profile-detail p {
+            margin: 0.3rem 0;
+        }
+        .rule {
+            font-family: monospace;
+            background: #e8dfd4;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+        }
+        footer {
+            margin-top: 2rem;
+            font-size: 0.7rem;
+            color: #888;
+            text-align: center;
+            border-top: 1px solid #e0d6cc;
+            padding-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img id="logoImg" class="logo" src="doma/ikona_mys.png" alt="myš" onerror="this.style.display='none'; document.getElementById('logoPlaceholder').style.display='flex';">
+        <div id="logoPlaceholder" class="logo-placeholder" style="display:none;">🐁</div>
+        <div>
+            <div class="system-title">Chceš myš? – Slovník mezer</div>
+            <h1>🔍 Detektor forenzních profilů</h1>
+        </div>
+    </div>
+    <div class="sub">Analýza jednoho textu – zjišťuje přítomnost 12 jazykových profilů (kombinace figur). Kliknutím na profil zobrazíte detail.</div>
+
+    <textarea id="inputText" placeholder="Vložte text (výpověď, smlouvu, email, přepis výslechu…)"></textarea>
+    <div class="btn-group">
+        <button id="analyzeBtn">🧠 Analyzovat profily</button>
+        <button id="clearBtn" class="secondary">✕ Smazat</button>
+    </div>
+
+    <div id="resultsPanel" style="display: none;" class="results"></div>
+
+    <footer>Detekce je binární – profil je buď aktivní, nebo ne. Žádné váhy, žádné „možná“. Interpretace patří uživateli v kontextu případu.</footer>
+</div>
+
+<script>
+    // ============================================================
+    // 1. DETEKCE FIGUR (stejný engine jako v porovnávači – osvědčený)
+    // ============================================================
+    function splitSentences(text) {
+        return text.split(/(?<=[.!?…])\s+|(?<=…)\s*|\n(?=\S)/).map(s=>s.trim()).filter(s=>s.length>1);
+    }
+
+    function detectFigures(text) {
+        const sentences = splitSentences(text);
+        const wordCount = text.split(/\s+/).filter(w=>w.length>0).length;
+        const raw = {};
+
+        const countMicro = (predicate) => sentences.filter(predicate).length;
+        const hasMacro = (predicate) => predicate(text, sentences) ? 1 : 0;
+
+        raw.anafora = countMicro((s, idx) => idx>0 && sentences[idx-1].trim().split(/\s+/)[0]?.toLowerCase() === s.trim().split(/\s+/)[0]?.toLowerCase());
+        raw.polysyndeton = countMicro(s => (s.match(/\b(a|i|nebo|ale|však|ani|či)\b/gi)||[]).length / Math.max(s.split(/\s+/).length,1) > 0.15);
+        raw.hypotaxe = countMicro(s => (s.match(/\b(který|že|aby|protože|když|jestliže|ačkoli|jakmile|dokud|pokud)\b/gi)||[]).length >= 2);
+        raw.parataxe = countMicro(s => s.split(/\s+/).length <= 6);
+        raw.tempus_shift = hasMacro((t) => /\b(byl|byla|bylo|byli|šel|šla|řekl|řekla)\b/i.test(t) && /\b(je|jsou|má|mám|jde|říká|vidí)\b/i.test(t));
+        raw.role_shift = hasMacro((t) => /\b(já|jsem|mě|mi|můj|moje|my|nás)\b/i.test(t) && /\b(on|ona|ono|oni|jej|jeho|její)\b/i.test(t));
+        raw.negace = countMicro(s => (s.match(/\b(ne|není|nejsem|nemá|nemám|nikdo|nic|nikdy|nikde|nijak)\b/gi)||[]).length >= 2);
+        raw.elipsa = countMicro(s => /\b(šel|šla|řekl|řekla|viděl|viděla|udělal|udělala|byl|byla|měl|měla)\b/i.test(s) && !/\b(já|jsem)\b/i.test(s));
+        raw.parenteze = countMicro(s => /[–—]|\(|\)|„[^"]*“/.test(s));
+        raw.fixace = (() => {
+            const words = text.toLowerCase().split(/\s+/).map(w=>w.replace(/[.,!?;:]/g,''));
+            const freq = {};
+            words.forEach(w=>{if(w.length>3) freq[w]=(freq[w]||0)+1;});
+            return Object.values(freq).some(c=>c>=3) ? 1 : 0;
+        })();
+        raw.hyperbola = countMicro(s => /\b(nej|absolutně|naprosto|totálně|vůbec|vždy|nikdy|tisíckrát|milokrát)\b/i.test(s));
+        raw.gradace = (() => {
+            const lens = sentences.map(s=>s.split(/\s+/).length);
+            let inc=0, dec=0;
+            for(let i=2;i<lens.length;i++) {
+                if(lens[i]>lens[i-1] && lens[i-1]>lens[i-2]) inc++;
+                if(lens[i]<lens[i-1] && lens[i-1]<lens[i-2]) dec++;
+            }
+            return (inc>=2 || dec>=2) ? 1 : 0;
+        })();
+        raw.kontrast = countMicro(s => /\b(ale|avšak|naopak|přesto|i\s+tak)\b/i.test(s));
+        raw.ironie = countMicro(s => /\b(byl|byla|bylo|je|jsou|jsem|jsi)\b/i.test(s) && /\b(ne|není|nejsem)\b/i.test(s) && /\b(ale|však|přesto)\b/i.test(s));
+        raw.deklarace = countMicro(s => /\b(prohlašuji|slibuji|potvrzuji|konstatuji|tvrdím|říkám\s+že)\b/i.test(s));
+        raw.metafora = countMicro(s => {
+            const m = s.match(/\b\w{3,}\s+(je|jsou|byl|byla)\s+\w{3,}\b/i);
+            if(!m) return false;
+            const before = s.substring(0, m.index).toLowerCase();
+            return !/\b(já|ty|on|ona|ono|my|vy|oni)\b/.test(before);
+        });
+        raw.prirovnani = countMicro(s => /\b(jako|podobně\s+jako|jako\s+by)\b/i.test(s));
+        raw.personifikace = countMicro(s => /\b(ticho|čas|světlo|tma|věc|slovo|myšlenka|vítr|voda|zbraň|nůž|dům|auto)\b/i.test(s) && /\b(řekl|říká|myslí|cítí|ví|chce|rozhodl|smál|plakal|volal|slyší)\b/i.test(s));
+        raw.synestezie = countMicro(s => {
+            const sense = [
+                /\b(barva|červen|modr|zelen|žlut|bíl|čern|tmav|světl|vidět|pohled)\b/i,
+                /\b(zvuk|tón|hluk|šum|tich|hlas|slyšet|hučet|hřmět)\b/i,
+                /\b(chuť|sladk|kysel|hořk|slan|ochutnat|chutnat)\b/i,
+                /\b(dotek|hladk|hrub|tepl|studen|cítit|dotýkat)\b/i,
+                /\b(vůně|zápach|vonět|páchnout|aroma)\b/i
+            ];
+            let cnt = 0;
+            sense.forEach(r => { if(r.test(s)) cnt++; });
+            return cnt >= 2;
+        });
+        raw.onomatopoeia = countMicro(s => /\b(bum|prásk|žbluňk|šum|huk|šust|bzzz|mňau|haf|čvacht|klap|cink|břink)\b/i.test(s));
+
+        const per100 = {};
+        for (let key in raw) {
+            per100[key] = (raw[key] / Math.max(wordCount,1)) * 100;
+        }
+        return { per100, wordCount, sentences };
+    }
+
+    // ============================================================
+    // 2. DEFINICE 12 PROFILŮ (podle dohody, žádné váhy, binární)
+    // ============================================================
+    const PROFILES = [
+        { name: "Rétorická příprava", 
+          desc: "Text působí stylisticky vyhlazeně, často s opakováním a složitými souvětími.",
+          forensic: "Výpověď pravděpodobně předem připravená. V mluveném projevu podezřelé.",
+          rule: "anafora > 2, polysyndeton > 2, hypotaxe > 1.5, parenteze < 1 (na 100 slov)",
+          check: (f) => f.anafora > 2 && f.polysyndeton > 2 && f.hypotaxe > 1.5 && f.parenteze < 1 },
+        { name: "Spontánní nejistota",
+          desc: "Přirozený mluvený projev s krátkými větami, váháním a opravami.",
+          forensic: "Autentický projev, může být stresovaný, ale nepřipravený.",
+          rule: "parataxe > 20, parenteze > 1.5, elipsa > 1.5, anafora < 1",
+          check: (f) => f.parataxe > 20 && f.parenteze > 1.5 && f.elipsa > 1.5 && f.anafora < 1 },
+        { name: "Obranné vyhýbání",
+          desc: "Popírání, vynechávání podmětu, opakování – snaha vyhnout se odpovědnosti.",
+          forensic: "Možné klamání nebo snaha se distancovat.",
+          rule: "negace > 3, elipsa > 2, fixace > 1.5",
+          check: (f) => f.negace > 3 && f.elipsa > 2 && f.fixace > 1.5 },
+        { name: "Emoční přetok",
+          desc: "Emocionálně nabitá výpověď s nadsázkou, gradací a přeskoky časů.",
+          forensic: "Může být autentické trauma, ale i stylizace.",
+          rule: "(polysyndeton > 1.5 nebo hyperbola > 1) a (gradace > 0 nebo tempus_shift > 0)",
+          check: (f) => (f.polysyndeton > 1.5 || f.hyperbola > 1) && (f.gradace > 0 || f.tempus_shift > 0) },
+        { name: "Narativní nestabilita",
+          desc: "Nestálá perspektiva – svědek přepíná mezi vlastní zkušeností a doslechem.",
+          forensic: "Svědek nestabilně přepíná perspektivu – možná popisuje cizí zážitek.",
+          rule: "role_shift > 0 a tempus_shift > 0",
+          check: (f) => f.role_shift > 0 && f.tempus_shift > 0 },
+        { name: "Nerealistická plynulost",
+          desc: "Text je příliš hladký, bez přirozených oprav a krátkých vět.",
+          forensic: "Téměř jistě předem napsaný text, odříkávaný.",
+          rule: "parenteze < 0.8, elipsa < 0.8, hypotaxe > 2, parataxe < 12",
+          check: (f) => f.parenteze < 0.8 && f.elipsa < 0.8 && f.hypotaxe > 2 && f.parataxe < 12 },
+        { name: "Fixace / zaseknutí",
+          desc: "Opakování stejných slov, neschopnost posunout se dále.",
+          forensic: "Stres, zahlcování, nebo úmyslné zdůraznění.",
+          rule: "fixace > 2.5",
+          check: (f) => f.fixace > 2.5 },
+        { name: "Přehnaná konkrétnost",
+          desc: "Nepřirozeně mnoho detailů (čísla, vlastní jména).",
+          forensic: "Často známka naučené výpovědi.",
+          rule: "počet detailů (čísla+jména) na 100 slov > 8",
+          check: (f, text) => {
+              const numbers = (text.match(/\b\d+\b/g)||[]).length;
+              const proper = (text.match(/\b[A-ZÁČĎÉĚÍŇÓŘŠŤŮÚÝŽ][a-záčďéěíňóřšťůúýž]+\b/g)||[]).length;
+              const words = text.split(/\s+/).length;
+              return ((numbers+proper)/Math.max(words,1))*100 > 8;
+          }},
+        { name: "Zlom v profilu",
+          desc: "Náhlá změna struktury – podezření na vloženou pasáž.",
+          forensic: "Text byl pravděpodobně složen z více částí.",
+          rule: "rozdíl v anafoře, parentezi nebo parataxi mezi polovinami textu > práh",
+          check: (f, text, sentences) => {
+              if (sentences.length < 8) return false;
+              const half = Math.floor(sentences.length/2);
+              const first = detectFigures(sentences.slice(0,half).join(' ')).per100;
+              const second = detectFigures(sentences.slice(half).join(' ')).per100;
+              return (Math.abs(first.anafora - second.anafora) > 2 ||
+                      Math.abs(first.parenteze - second.parenteze) > 2 ||
+                      Math.abs(first.parataxe - second.parataxe) > 15);
+          }},
+        { name: "Sugestibilita", desc: "Přejímání jazyka tazatele. Vyžaduje porovnání s otázkami.", forensic: "Pro samostatný text nelze hodnotit.", rule: "Nedostupné", check: () => false, notApplicable: true },
+        { name: "Koordinace výpovědí", desc: "Shodné profily napříč výpověďmi.", forensic: "Detekuje porovnávač napříč texty.", rule: "Porovnávač", check: () => false, notApplicable: true },
+        { name: "Neutrální baseline", desc: "Žádný z výrazných profilů se neuplatňuje.", forensic: "Text je jazykově nezatížený.", rule: "Žádný jiný profil aktivní", check: (f, text, sentences, activeOthers) => activeOthers === 0 }
+    ];
+
+    function evaluateProfiles(text) {
+        const { per100, wordCount, sentences } = detectFigures(text);
+        const active = [];
+        for (let prof of PROFILES) {
+            if (prof.notApplicable) continue;
+            let activeFlag = false;
+            if (prof.name === "Přehnaná konkrétnost") activeFlag = prof.check(per100, text);
+            else if (prof.name === "Zlom v profilu") activeFlag = prof.check(per100, text, sentences);
+            else if (prof.name === "Neutrální baseline") activeFlag = false;
+            else activeFlag = prof.check(per100);
+            if (activeFlag) active.push(prof.name);
+        }
+        if (active.length === 0) active.push("Neutrální baseline");
+        // Vytvoříme pole objektů pro všechny profily (včetně neaktivních) s informací o aktivitě
+        const allProfiles = PROFILES.map(prof => {
+            if (prof.notApplicable) return { ...prof, active: false, notApplicable: true };
+            let activeFlag = false;
+            if (prof.name === "Přehnaná konkrétnost") activeFlag = prof.check(per100, text);
+            else if (prof.name === "Zlom v profilu") activeFlag = prof.check(per100, text, sentences);
+            else if (prof.name === "Neutrální baseline") activeFlag = (active.length === 0);
+            else activeFlag = prof.check(per100);
+            return { ...prof, active: activeFlag };
+        });
+        return allProfiles;
+    }
+
+    // ============================================================
+    // 3. RENDER VÝSLEDKŮ
+    // ============================================================
+    function renderResults() {
+        const text = document.getElementById('inputText').value.trim();
+        if (!text) {
+            alert('Vložte text.');
+            return;
+        }
+
+        const profiles = evaluateProfiles(text);
+        const container = document.getElementById('resultsPanel');
+        container.innerHTML = '<h2 style="margin-bottom: 0.8rem;">📊 12 forenzních profilů</h2>';
+        
+        profiles.forEach(prof => {
+            if (prof.notApplicable) return; // neukazujeme profily, které nejsou pro samostatný text
+            const statusClass = prof.active ? 'status-active' : 'status-inactive';
+            const statusText = prof.active ? 'Aktivní' : 'Neaktivní';
+            const card = document.createElement('div');
+            card.className = 'profile-card';
+            card.innerHTML = `
+                <div class="profile-header">
+                    <span class="profile-name">${prof.name}</span>
+                    <span class="profile-status ${statusClass}">${statusText}</span>
+                </div>
+                <div class="profile-detail">
+                    <p><strong>Popis:</strong> ${prof.desc}</p>
+                    <p><strong>Forenzní význam:</strong> ${prof.forensic}</p>
+                    <p><strong>Detekční pravidlo:</strong> <span class="rule">${prof.rule}</span></p>
+                </div>
+            `;
+            const header = card.querySelector('.profile-header');
+            const detail = card.querySelector('.profile-detail');
+            header.addEventListener('click', () => {
+                const isOpen = detail.style.display === 'block';
+                detail.style.display = isOpen ? 'none' : 'block';
+            });
+            container.appendChild(card);
+        });
+
+        document.getElementById('resultsPanel').style.display = 'block';
+    }
+
+    document.getElementById('analyzeBtn').addEventListener('click', renderResults);
+    document.getElementById('clearBtn').addEventListener('click', () => {
+        document.getElementById('inputText').value = '';
+        document.getElementById('resultsPanel').style.display = 'none';
+    });
+
+    const img = document.getElementById('logoImg');
+    img.onerror = () => {
+        img.style.display = 'none';
+        document.getElementById('logoPlaceholder').style.display = 'flex';
+    };
+</script>
+</body>
+</html>
