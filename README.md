@@ -19,6 +19,11 @@ Vše běží offline, žádná data nikam neodcházejí. Je to váš osobní „
 | [📁 nastroje/](./home/analyzator_vypovedi.html) | Samotné HTML nástroje – otevřete v prohlížeči a pracujte. |
 | [📄 12-poruch.md](./home/12-poruch.md) | Hlavní přehled poruch – vhodný k tisku i studiu. |
 
+| [🩺 mapování figur](./home/mapovani_figur.html) | Vložte text, nástroj zvýrazní figury a ukáže jejich četnost. |
+| [🧮 sorovnávač textů](./home/srovnavator.html) | Dva texty vedle sebe a srovnejte výskyt vzorců. |
+| [⚖️ hledač vzorců](./home/hledacac_vzorcu.html) | Vložte text, nástroj zvýrazní poruchy a ukáže jejich četnost. |
+| [🪞 jazykový detektor](./home/jazyk_detektor.html) | dekejute odchylky v textu. |
+
 ---
 
 ## 🚀 Rychlý start
@@ -36,6 +41,8 @@ Vše běží offline, žádná data nikam neodcházejí. Je to váš osobní „
 |---------|-------|
 | [🔍 Hlavní analyzátor](./home/analyza.html) | Vložte text, nástroj zvýrazní poruchy a ukáže jejich četnost. |
 | [📊 Porovnávač textů](./home/porovnani.html) | (volitelné) Dejte dva texty vedle sebe a porovnejte výskyt poruch. |
+
+
 
 ---
 
