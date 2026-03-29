@@ -20,8 +20,8 @@ Vše běží offline, žádná data nikam neodcházejí. Je to váš osobní „
 | [📄 12-poruch.md](./home/12-poruch.md) | Hlavní přehled poruch – vhodný k tisku i studiu. |
 
 | [🩺 mapování figur](./home/mapovani_figur.html) | Vložte text, nástroj zvýrazní figury a ukáže jejich četnost. |
-| [⚖️ sorovnávač textů](./home/srovnavator.html) | Dva texty vedle sebe a srovnejte výskyt vzorců. |
-| [🧮 hledač vzorců](./home/hledacac_vzorcu.html) | Vložte text, nástroj zvýrazní poruchy a ukáže jejich četnost. |
+| [⚖️ sorovnávač textů](./home/srovnavator.html) | srovnejte výskyt vzorců v několika textech. |
+| [🧮 detektor vzorců](./home/detektor_vzorcu.html) | Vložte text, nástroj zvýrazní vzorce jazykových struktur. |
 | [🪞 manual_v2](./home/manual_v2.html) | návod k použití. |
 
 ---
