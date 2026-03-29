@@ -31,6 +31,12 @@ Vše běží offline, žádná data nikam neodcházejí. Je to váš osobní „
 | [📜 zápisník mezer BASELINE](./home/baseline_zapis_mezer_v1.html) | zapisník mezer s baseline. |
 | [🪤 forenzni analyzator v1](./home/forenzni_analyzator_v1.html) | forenzni_analyzator_v1. |
 | [🏺 BASELINE](./home/baseline.html) | baseline v2. |
+| [🤖 argumenty](./home/argumenty.html) | Argumenty. |
+| [👾 modelové scénáe](./home/modelove_scenare.html) | Modelové scénáe. |
+| [💤 manuál](./home/manual.html) | Manuál. |
+| [🫆 etický kodex](./home/eticky_kodex.html) | Etický kodex. |
+| [👣 licence](./home/licence.html) | Licence. |
+| [🫂 zpětná vazba](./home/zpetna_vazba.html) | Zpětná vazba. |
 
 
 
