@@ -21,10 +21,18 @@ Vše běží offline, žádná data nikam neodcházejí. Je to váš osobní „
 
 | [🩺 mapování figur](./home/mapovani_figur.html) | Vložte text, nástroj zvýrazní figury a ukáže jejich četnost. |
 | [⚖️ sorovnávač textů](./home/srovnavator.html) | srovnejte výskyt vzorců v několika textech. |
-| [🧮 detektor vzorců](./home/detektor_vzorcu.html) | Vložte text, nástroj zvýrazní vzorce jazykových struktur.  |
-| [💯 detektor vzorců v2](./home/detektor_vzorcu_v2.html) | Vložte text, nástroj zvýrazní vzorce jazykových struktur v2. |
+| [🧮 detektor vzorců](./home/detektor_vzorcu.html) | X Vložte text, vzorce jazykových struktur.  |
+| [⛓️‍💥 detektor vzorců v2](./home/detektor_vzorcu_v2.html) | Vložte text, nástroj zvýrazní vzorce jazykových struktur v2. |
 | [🪞 manual_v2](./home/manual_v2.html) | návod k použití. |
 | [🎣 detektor figur a mezer](./home/detektor_figur_a_mezer.html) | detektor figur a mezer. |
+| [💬 porovnávač výpovědí](./home/porovnavac_vypovedi.html) | Vložte texty, nástroj porovná výpovědi.  |
+| [⚧️ detektor forenzních profilů](./home/detektor_forenznich_profilu.html) | Vložte text, nástroj detekuje forenzní profily. |
+| [🪦 porovnaváč_propojený se zápisníkem](./home/porovnavac_propojeny_zapis.html) | Uloží a načte data ze zápisníku mezer. |
+| [📜 zápisník mezer BASELINE](./home/baseline_zapis_mezer_v1.html) | zapisník mezer s baseline. |
+| [🪤 forenzni analyzator v1](./home/forenzni_analyzator_v1.html) | forenzni_analyzator_v1. |
+| [🏺 BASELINE](./home/baseline.html) | baseline v2. |
+
+
 
 ---
 
