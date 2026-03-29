@@ -21,7 +21,7 @@ Vše běží offline, žádná data nikam neodcházejí. Je to váš osobní „
 
 | [🩺 mapování figur](./home/mapovani_figur.html) | Vložte text, nástroj zvýrazní figury a ukáže jejich četnost. |
 | [⚖️ sorovnávač textů](./home/srovnavator.html) | srovnejte výskyt vzorců v několika textech. |
-| [🧮 detektor vzorců]. |(./home/detektor_vzorcu.html) | Vložte text, nástroj zvýrazní vzorce jazykových struktur. |
+| [🧮 detektor vzorců](./home/detektor_vzorcu.html) | Vložte text, nástroj zvýrazní vzorce jazykových struktur.  |
 | [💯 detektor vzorců v2](./home/detektor_vzorcu_v2.html) | Vložte text, nástroj zvýrazní vzorce jazykových struktur v2. |
 | [🪞 manual_v2](./home/manual_v2.html) | návod k použití. |
 | [🎣 volne](./home/html) | volně. |
