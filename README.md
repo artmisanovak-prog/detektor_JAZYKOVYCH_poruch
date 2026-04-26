@@ -78,3 +78,6 @@ Tento repozitář je volně k použití pro vyšetřovatele, soudce, advokáty a
 | [👣 licence](./home/licence.html) | Licence. |
 | [🫂 zpětná vazba](./home/zpetna_vazba.html) | Zpětná vazba. |
 
+- [srovnavator](doma/srovnavator.html)
+- [pirovnani](doma/porovnani.html)
+
