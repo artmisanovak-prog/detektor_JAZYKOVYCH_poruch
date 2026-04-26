@@ -19,26 +19,6 @@ Vše běží offline, žádná data nikam neodcházejí. Je to váš osobní „
 | [📁 nastroje/](./home/analyzator_vypovedi.html) | Samotné HTML nástroje – otevřete v prohlížeči a pracujte. |
 | [📄 12-poruch.md](./home/12-poruch.md) | Hlavní přehled poruch – vhodný k tisku i studiu. |
 
-| [🩺 mapování figur](./home/mapovani_figur.html) | Vložte text, nástroj zvýrazní figury a ukáže jejich četnost. |
-| [⚖️ sorovnávač textů](./home/srovnavator.html) | srovnejte výskyt vzorců v několika textech. |
-| [🧮 detektor vzorců](./home/detektor_vzorcu.html) | X Vložte text, vzorce jazykových struktur.  |
-| [⛓️‍💥 detektor vzorců v2](./home/detektor_vzorcu_v2.html) | Vložte text, nástroj zvýrazní vzorce jazykových struktur v2. |
-| [🪞 manual_v2](./home/manual_v2.html) | návod k použití. |
-| [🎣 detektor figur a mezer](./home/detektor_figur_a_mezer.html) | detektor figur a mezer. |
-| [💬 porovnávač výpovědí](./home/porovnavac_vypovedi.html) | Vložte texty, nástroj porovná výpovědi.  |
-| [⚧️ detektor forenzních profilů](./home/detektor_forenznich_profilu.html) | Vložte text, nástroj detekuje forenzní profily. |
-| [🪦 porovnaváč_propojený se zápisníkem](./home/porovnavac_propojeny_zapis.html) | Uloží a načte data ze zápisníku mezer. |
-| [📜 zápisník mezer BASELINE](./home/baseline_zapis_mezer_v1.html) | zapisník mezer s baseline. |
-| [🪤 forenzni analyzator v1](./home/forenzni_analyzator_v1.html) | forenzni_analyzator_v1. |
-| [🏺 BASELINE](./home/baseline.html) | baseline v2. |
-| [🤖 argumenty](./home/argumenty.html) | Argumenty. |
-| [👾 modelové scénáe](./home/modelove_scenare.html) | Modelové scénáe. |
-| [💤 manuál](./home/manual.html) | Manuál. |
-| [🫆 etický kodex](./home/eticky_kodex.html) | Etický kodex. |
-| [👣 licence](./home/licence.html) | Licence. |
-| [🫂 zpětná vazba](./home/zpetna_vazba.html) | Zpětná vazba. |
-
-
 
 ---
 
@@ -76,3 +56,25 @@ Je to jako mít rentgen na jazyk – neříká, co to znamená, ale ukazuje, kde
 Celý systém vychází z metody **„Chceš myš?“** – více na [chcesmys@gmail.com](mailto:chcesmys@gmail.com).
 
 Tento repozitář je volně k použití pro vyšetřovatele, soudce, advokáty a studenty. Pokud ho chcete použít komerčně nebo upravit pro firmu, napište na výše uvedený e-mail.
+
+---
+
+| [🩺 mapování figur](./home/mapovani_figur.html) | Vložte text, nástroj zvýrazní figury a ukáže jejich četnost. |
+| [⚖️ sorovnávač textů](./home/srovnavator.html) | srovnejte výskyt vzorců v několika textech. |
+| [🧮 detektor vzorců](./home/detektor_vzorcu.html) | X Vložte text, vzorce jazykových struktur.  |
+| [⛓️‍💥 detektor vzorců v2](./home/detektor_vzorcu_v2.html) | Vložte text, nástroj zvýrazní vzorce jazykových struktur v2. |
+| [🪞 manual_v2](./home/manual_v2.html) | návod k použití. |
+| [🎣 detektor figur a mezer](./home/detektor_figur_a_mezer.html) | detektor figur a mezer. |
+| [💬 porovnávač výpovědí](./home/porovnavac_vypovedi.html) | Vložte texty, nástroj porovná výpovědi.  |
+| [⚧️ detektor forenzních profilů](./home/detektor_forenznich_profilu.html) | Vložte text, nástroj detekuje forenzní profily. |
+| [🪦 porovnaváč_propojený se zápisníkem](./home/porovnavac_propojeny_zapis.html) | Uloží a načte data ze zápisníku mezer. |
+| [📜 zápisník mezer BASELINE](./home/baseline_zapis_mezer_v1.html) | zapisník mezer s baseline. |
+| [🪤 forenzni analyzator v1](./home/forenzni_analyzator_v1.html) | forenzni_analyzator_v1. |
+| [🏺 BASELINE](./home/baseline.html) | baseline v2. |
+| [🤖 argumenty](./home/argumenty.html) | Argumenty. |
+| [👾 modelové scénáe](./home/modelove_scenare.html) | Modelové scénáe. |
+| [💤 manuál](./home/manual.html) | Manuál. |
+| [🫆 etický kodex](./home/eticky_kodex.html) | Etický kodex. |
+| [👣 licence](./home/licence.html) | Licence. |
+| [🫂 zpětná vazba](./home/zpetna_vazba.html) | Zpětná vazba. |
+
